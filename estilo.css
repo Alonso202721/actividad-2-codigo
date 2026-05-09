@@ -215,7 +215,7 @@ body{
 
 /* Botón 🛒 en el header, junto a "Iniciar Sesión" */
 .carrito-btn-header {
-    background: black;
+    background: white;
     color: white;
     border: none;
     padding: 8px 14px;
