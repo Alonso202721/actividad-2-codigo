@@ -20,8 +20,46 @@
 
     <div class="right">
         <a href="">Iniciar Sesion</a>
+
+        <!-- 🛒 BOTÓN CARRITO en el header -->
+        <!-- onclick="abrirCarrito()" → cuando el usuario hace clic,
+             JavaScript ejecuta esa función -->
+        <button class="carrito-btn-header" onclick="abrirCarrito()">
+            🛒 <span id="badge-cantidad">0</span>
+        </button>
     </div>
     </header>
+
+    <!-- ══════════════════════════════
+         PANEL LATERAL DEL CARRITO
+         Empieza oculto fuera de la pantalla (right: -420px en CSS).
+         Cuando se agrega la clase "abierto", se desliza hacia adentro.
+    ══════════════════════════════ -->
+    <div class="carrito-panel" id="panel-carrito">
+        <div class="carrito-panel-header">
+            <h2>Tu Carrito</h2>
+            <!-- onclick="cerrarCarrito()" → cierra el panel -->
+            <button class="btn-cerrar" onclick="cerrarCarrito()">✕</button>
+        </div>
+        <!-- Aquí JavaScript va a insertar los productos del carrito -->
+        <div class="carrito-items" id="carrito-items">
+            <p class="carrito-vacio">Tu carrito está vacío 🛒</p>
+        </div>
+        <div class="carrito-footer">
+            <div class="total-fila">
+                <span>Total:</span>
+                <span id="total-precio">S/ 0</span>
+            </div>
+            <button class="btn-comprar" onclick="comprar()">✅ Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Fondo oscuro que aparece detrás del carrito -->
+    <!-- onclick="cerrarCarrito()" → si haces clic en el fondo, cierra el panel -->
+    <div class="overlay" id="overlay" onclick="cerrarCarrito()"></div>
+
+    <!-- Notificación pequeña que aparece al agregar un producto -->
+    <div class="notificacion" id="notificacion"></div>
 
     <section class="hero">
         <h1>Libros y herramientas para tu éxito profesional</h1>
@@ -64,40 +102,48 @@
 
     <div class="productos">
 
+        <!-- data-nombre y data-precio → atributos personalizados que
+             JavaScript lee para saber qué producto se está agregando -->
         <div class="producto">
             <img src="imagen/logo6.png">
             <p>Articulo 01</p>
             <span>S/ 80</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)" data-nombre="Articulo 01" data-precio="80" data-img="imagen/logo6.png">+ Agregar</button>
         </div>
 
         <div class="producto">
             <img src="imagen/logo7.png">
             <p>Articulo 02</p>
             <span>S/ 120</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)" data-nombre="Articulo 02" data-precio="120" data-img="imagen/logo7.png">+ Agregar</button>
         </div>
 
         <div class="producto">
             <img src="imagen/logo8.png">
             <p>Articulo 03</p>
             <span>S/ 90</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)" data-nombre="Articulo 03" data-precio="90" data-img="imagen/logo8.png">+ Agregar</button>
         </div>
 
         <div class="producto">
             <img src="imagen/logo9.png">
             <p>Articulo 04</p>
             <span>S/ 25</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)" data-nombre="Articulo 04" data-precio="25" data-img="imagen/logo9.png">+ Agregar</button>
         </div>
 
         <div class="producto">
             <img src="imagen/logo10.png">
             <p>Articulo 05</p>
             <span>S/ 15</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)" data-nombre="Articulo 05" data-precio="15" data-img="imagen/logo10.png">+ Agregar</button>
         </div>
 
         <div class="producto">
             <img src="imagen/logo11.png">
             <p>Articulo 06</p>
             <span>S/ 35</span>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)" data-nombre="Articulo 06" data-precio="35" data-img="imagen/logo11.png">+ Agregar</button>
         </div>
 
     </div>
@@ -136,6 +182,152 @@
     </div>
 
 </footer>
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT DEL CARRITO
+     Se pone al final del body para que el HTML ya esté
+     cargado cuando este código se ejecute.
+══════════════════════════════════════════════════ -->
+<script>
+
+// ── PASO 1: El carrito ─────────────────────────────
+// Un array (lista) vacío donde guardaremos los productos
+// que el usuario vaya agregando. Empieza vacío [].
+let carrito = [];
+
+
+// ── PASO 2: agregarAlCarrito(boton) ────────────────
+// Esta función se llama cuando el usuario hace clic en
+// "+ Agregar". Recibe el botón como parámetro (this).
+function agregarAlCarrito(boton) {
+
+    // boton.dataset.nombre lee el atributo data-nombre del HTML
+    // boton.dataset.precio lee data-precio (el + lo convierte a número)
+    const nombre = boton.dataset.nombre;
+    const precio = +boton.dataset.precio;
+    const img    = boton.dataset.img;
+
+    // ¿ya está ese producto en el carrito?
+    // .find() recorre el array y devuelve el primero que coincida
+    const existente = carrito.find(item => item.nombre === nombre);
+
+    if (existente) {
+        // Si ya existe → solo le sumamos 1 a la cantidad
+        existente.cantidad++;
+    } else {
+        // Si no existe → lo agregamos como objeto nuevo con cantidad 1
+        carrito.push({ nombre, precio, img, cantidad: 1 });
+    }
+
+    actualizarCarrito();
+    mostrarNotificacion("✔ " + nombre + " agregado");
+}
+
+
+// ── PASO 3: actualizarCarrito() ────────────────────
+// Lee el array "carrito" y dibuja su contenido en el
+// panel lateral + actualiza el número rojo del botón.
+function actualizarCarrito() {
+
+    // .reduce() acumula un valor recorriendo todo el array
+    // aquí suma todas las cantidades para el badge (número rojo)
+    const totalItems = carrito.reduce(function(acc, item) { return acc + item.cantidad; }, 0);
+    document.getElementById("badge-cantidad").textContent = totalItems;
+
+    const contenedor = document.getElementById("carrito-items");
+
+    if (carrito.length === 0) {
+        contenedor.innerHTML = '<p class="carrito-vacio">Tu carrito está vacío 🛒</p>';
+    } else {
+        // .map() convierte cada item del array en un trozo de HTML
+        // .join("") une todos esos trozos en un solo string
+        contenedor.innerHTML = carrito.map(function(item, indice) {
+            return '<div class="carrito-item">' +
+                '<img src="' + item.img + '" alt="' + item.nombre + '">' +
+                '<div class="carrito-item-info">' +
+                    '<p>' + item.nombre + '</p>' +
+                    '<span>S/ ' + item.precio + '</span>' +
+                    '<div class="controles">' +
+                        '<button onclick="cambiarCantidad(' + indice + ', -1)">−</button>' +
+                        '<span>' + item.cantidad + '</span>' +
+                        '<button onclick="cambiarCantidad(' + indice + ', +1)">+</button>' +
+                    '</div>' +
+                '</div>' +
+                '<button class="btn-eliminar" onclick="eliminar(' + indice + ')">🗑</button>' +
+            '</div>';
+        }).join("");
+    }
+
+    // Calcula el precio total: precio × cantidad de cada item
+    const total = carrito.reduce(function(acc, item) { return acc + item.precio * item.cantidad; }, 0);
+    document.getElementById("total-precio").textContent = "S/ " + total;
+}
+
+
+// ── PASO 4: cambiarCantidad(indice, cambio) ────────
+// Sube (+1) o baja (-1) la cantidad de un item.
+// "indice" es su posición en el array carrito[].
+function cambiarCantidad(indice, cambio) {
+    carrito[indice].cantidad += cambio;
+
+    // Si la cantidad llega a 0, lo eliminamos del array
+    // .splice(indice, 1) elimina 1 elemento en esa posición
+    if (carrito[indice].cantidad <= 0) {
+        carrito.splice(indice, 1);
+    }
+    actualizarCarrito();
+}
+
+
+// ── PASO 5: eliminar(indice) ───────────────────────
+function eliminar(indice) {
+    carrito.splice(indice, 1);
+    actualizarCarrito();
+}
+
+
+// ── PASO 6: Abrir y cerrar el panel ───────────────
+// .classList.add("abierto") agrega la clase CSS "abierto"
+// al panel → eso lo mueve a la pantalla (ver estilo.css).
+// .classList.remove("abierto") la quita → vuelve a ocultarse.
+function abrirCarrito() {
+    document.getElementById("panel-carrito").classList.add("abierto");
+    document.getElementById("overlay").classList.add("activo");
+}
+
+function cerrarCarrito() {
+    document.getElementById("panel-carrito").classList.remove("abierto");
+    document.getElementById("overlay").classList.remove("activo");
+}
+
+
+// ── PASO 7: Notificación temporal ─────────────────
+// setTimeout() espera 2000ms (2 segundos) y luego
+// ejecuta la función → quita la clase "visible"
+// y la notificación desaparece sola.
+function mostrarNotificacion(mensaje) {
+    const notif = document.getElementById("notificacion");
+    notif.textContent = mensaje;
+    notif.classList.add("visible");
+    setTimeout(function() {
+        notif.classList.remove("visible");
+    }, 2000);
+}
+
+
+// ── PASO 8: Finalizar compra ───────────────────────
+function comprar() {
+    if (carrito.length === 0) {
+        alert("Tu carrito está vacío 🛒");
+        return;
+    }
+    alert("✅ ¡Gracias por tu compra! Pronto recibirás tu confirmación.");
+    carrito = [];
+    actualizarCarrito();
+    cerrarCarrito();
+}
+
+</script>
 
 </body>
 </html>
